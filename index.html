@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SVM Document Manipulator</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+      }
+      * {
+        font-family: system-ui;
+      }
+
+      h1,
+      h2,
+      h3 {
+        font-weight: 400;
+      }
+
+      img,
+      canvas {
+        max-height: 400px;
+        max-width: 400px;
+      }
+
+      #results > div {
+        margin: 20px;
+        margin-top: 0;
+      }
+
+      header {
+        position: fixed; 
+        height: 50px; 
+        top:0; 
+        left: 0; 
+        right: 0
+      }
+
+      main {
+        overflow: auto;
+        position: fixed;
+        /* height: calc(100% - 100px); */
+        top: 50px;
+        bottom: 50px;
+        left: 0;
+        right: 0;
+      }
+
+      footer {
+        position: fixed; 
+        height: 50px; 
+        bottom: 0; 
+        left: 0; 
+        right: 0
+      }
+
+      canvas {
+            -webkit-user-drag: none;
+            user-select: none;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+        }
+      
+      
+    </style>
+  </head>
+  <body>
+    <header>
+      SVM Document Manipulator
+    </header>
+    <main >
+      <div id="results">
+        <div id="highlighted">
+          <h3>Highlighted Paper</h3>
+          <canvas id="paintingbase"></canvas>
+        </div>
+        <div id="extracted">
+          <h3>Extracted Paper</h3>
+          <canvas id="extractingbase"></canvas>
+        </div>
+      </div>
+    </main>
+    <footer>
+      <input type="file" name="file" id="file">
+    </footer>
+      
+
+
+      
+    <script src="https://docs.opencv.org/4.7.0/opencv.js" ></script>
+    <!-- warning: loading OpenCV can take some time. Load asynchronously -->
+    
+    <script src="./documentscanner.js"></script>
+    <script>
+      window.addEventListener("load", function () {
+        file.addEventListener("change", function (event) {
+          const file = event.target.files[0];
+          const img = new Image();
+          img.src = URL.createObjectURL(file);
+          clearData();
+          paintingbase = document.getElementById("paintingbase");
+          let scanner = null
+  
+          img.onload = function () {
+            scanner = new DocumentScanner(img, paintingbase, extractingbase);
+            
+              scanner.detect(img);
+              scanner.fillPaintingBase();
+              scanner.drawDefaultPoints();
+              scanner.crop();
+          }
+  
+            paintingbase.addEventListener("mousedown", function (event) {
+              scanner.startMoving(event);
+       
+            });
+            paintingbase.addEventListener("mousemove", function (event) {
+              scanner.moving(event);
+            });
+            paintingbase.addEventListener("mouseup", function (event) {
+              scanner.stopMoving(event);
+            });
+        });
+
+      
+      });
+
+      function clearData() {
+        // highlighted.querySelector("canvas")?.remove();
+        // extracted.querySelector("canvas")?.remove();
+        // cornerPts.querySelector("pre").textContent = "";
+      }
+    </script>
+  </body>
+</html>
