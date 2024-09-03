@@ -9,19 +9,19 @@ class DocumentScanner {
     moveBR = false;
     moveBL = false;
     mousePosition = {x: 0, y: 0};
-    scalefactore = 0
+    xscale = 0;
+    yscale = 0;
 
-    constructor(originalimage, paintingbase, extractingbase) {
+
+    constructor(originalimage) {
       if (!("cv" in window)) {
         throw new Error("OpenCV not found");
       }else{
         this.cv = window["cv"];
       }
       this.originalimage = originalimage;
-      this.scalefactore = this.originalimage.width / this.originalimage.height;
-      this.paintingbase = paintingbase;
-
-      this.extractingbase = extractingbase;
+      this.paintingbase = document.getElementById("paintingbase");
+      this.extractingbase = document.getElementById("extractingbase");
     }
 
     startMoving(event) {
@@ -70,10 +70,11 @@ class DocumentScanner {
 
     getMousePoint(event) {
         const rect = this.paintingbase.getBoundingClientRect();
-        const x = event.clientX - rect.left
-        const y = event.clientY - rect.top
+        const x = (event.clientX - rect.left);
+        const y = (event.clientY - rect.top);
         console.log("x: " + x + " y: " + y)
-        console.log(this.scalefactore)
+        console.log("xscale: " + this.xscale + " yscale: " + this.yscale)
+        console.log("xscale: " + ((event.clientX - rect.left) * this.xscale) + 10 + " yscale: " + ((event.clientY - rect.top) * this.yscale) + 10)
         console.log(this.calculatedPoints)
         return {x, y};
     }  
@@ -83,7 +84,8 @@ class DocumentScanner {
         return distance < 20;
     }
   
-    detect(source){
+    detect(){
+      const  source = this.paintingbase;
       let cv = this.cv;
       const img = cv.imread(source);
       const gray = new cv.Mat();
@@ -116,16 +118,26 @@ class DocumentScanner {
       thresh.delete();
       contours.delete();
       hierarchy.delete();
+      console.log(points)
       this.calculatedPoints = points;
     }
 
     fillPaintingBase() {
-        this.paintingbase.width = this.originalimage.width;
-        this.paintingbase.height = this.originalimage.height;
-        this.paintingbase.style.maxWidth = this.originalimage.width + 'px';
-        this.paintingbase.style.maxHeight = this.originalimage.height + 'px';
-        const img = cv.imread(this.originalimage);
-        cv.imshow(this.paintingbase, img);
+      const canvas = this.paintingbase ;
+      const canvasBB = canvas.getBoundingClientRect()
+      const ctx = canvas.getContext("2d");
+      const img = this.originalimage;
+      const hRatio = canvasBB.width  / img.width;
+      const vRatio =  canvasBB.height / img.height;
+      const ratio  = Math.min ( hRatio, vRatio );
+      const centerShift_x = ( canvasBB.width - img.width*ratio ) / 2;
+      const centerShift_y = ( canvasBB.height - img.height*ratio ) / 2;  
+      ctx.clearRect(0,0,canvas.width, canvas.height);
+      console.log(img.width, img.height, canvas.getBoundingClientRect(), centerShift_x, centerShift_y, ratio,  img.width*ratio, img.height*ratio);
+      ctx.drawImage(img, 0,0, img.width, img.height,
+                         0,0, canvas.width, canvas.height);
+        
+        cv.imshow(this.paintingbase, cv.imread(this.originalimage));
     }
 
     drawDefaultPoints() {
